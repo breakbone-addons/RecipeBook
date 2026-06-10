@@ -398,6 +398,61 @@ function T.test_every_recipe_tooltip_renders_without_error()
     end
 end
 
+function T.test_isSpell_recipes_use_spell_tooltip_not_item()
+    -- Recipes with isSpell=true are keyed by a spell ID. The tooltip
+    -- must call SetHyperlink("spell:...") and NOT SetItemByID, because
+    -- a spell ID may collide with an unrelated item ID (e.g. spell
+    -- 28590 "Flask of Blinding Light" vs. item 28590 "Ribbon of
+    -- Sacrifice"). Guards against regression of the bug where
+    -- discovery flasks showed random trinkets in their tooltip.
+    RecipeBookDB = RecipeBookDB or {}
+    RecipeBookDB.characters = RecipeBookDB.characters or {}
+    RecipeBookCharDB = RecipeBookCharDB or {}
+
+    local origSetItemByID = GameTooltip.SetItemByID
+    local origSetHyperlink = GameTooltip.SetHyperlink
+    local itemCalls, spellCalls
+    GameTooltip.SetItemByID = function(self, id) itemCalls = itemCalls + 1 end
+    GameTooltip.SetHyperlink = function(self, link)
+        spellCalls = spellCalls + 1
+        assert_true(link:sub(1, 6) == "spell:",
+            "SetHyperlink called with non-spell link: " .. tostring(link))
+    end
+
+    local offenders = {}
+    for _, pid in ipairs(PROFESSIONS) do
+        for rid, data in pairs(RecipeBook.recipeDB[pid]) do
+            if data.isSpell then
+                itemCalls, spellCalls = 0, 0
+                local srcType, srcID, srcName, zone, isWorldDrop, dropRate =
+                    RecipeBook.GetBestSourceSummary(pid, rid, nil, nil)
+                local row = {
+                    _profID = pid, _recipeID = rid,
+                    _sourceType = srcType, _sourceID = srcID,
+                    _sourceName = srcName, _zoneName = zone,
+                    _isWorldDrop = isWorldDrop, _dropRate = dropRate,
+                    _canWaypoint = false,
+                }
+                pcall(RecipeBook._OnRecipeEnter, row)
+                if itemCalls > 0 or spellCalls == 0 then
+                    offenders[#offenders + 1] = string.format(
+                        "[%d][%d] %s: item=%d spell=%d",
+                        pid, rid, data.name or "?", itemCalls, spellCalls)
+                end
+            end
+        end
+    end
+
+    GameTooltip.SetItemByID = origSetItemByID
+    GameTooltip.SetHyperlink = origSetHyperlink
+
+    if #offenders > 0 then
+        error("isSpell recipes must use spell tooltip, not item tooltip:\n  "
+            .. offenders[1] .. (#offenders > 1
+                and string.format("\n  (and %d more)", #offenders - 1) or ""))
+    end
+end
+
 -- ============================================================
 -- Faction-mirror deduplication
 -- ============================================================

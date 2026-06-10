@@ -64,16 +64,16 @@ local function OnRecipeEnter(self)
     if not data.isSpell then
         -- Recipe item: show the item tooltip directly
         safeSetItem(self._recipeID)
-    elseif data.teaches ~= self._recipeID or self._profID == 333 then
-        -- Key is a real spell ID (teaches differs, or enchanting where
-        -- the spell IS the product).  Show the spell tooltip.
+    else
+        -- Key is a spell ID (trainer-taught enchant, discovery recipe,
+        -- Find Fish, Prospecting, etc.). Never fall through to
+        -- SetItemByID — the spell ID may collide with an unrelated
+        -- item (e.g. spell 28590 "Flask of Blinding Light" vs.
+        -- item 28590 "Ribbon of Sacrifice").
         local ok = pcall(GameTooltip.SetHyperlink, GameTooltip, "spell:" .. self._recipeID)
         if not ok then
             GameTooltip:AddLine(data.name or "Unknown Recipe", 1, 1, 1)
         end
-    else
-        -- Key is the crafted item ID — show the item tooltip
-        safeSetItem(self._recipeID)
     end
 
     GameTooltip:AddLine(" ")
