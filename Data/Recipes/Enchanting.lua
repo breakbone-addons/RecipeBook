@@ -1639,7 +1639,7 @@ RecipeBook.recipeDB[333] = {
 		reputationFaction = 1011,
 		reputationLevel = 6,
 		requiredSkill = 375,
-		phase = 1,
+		phase = 3,
 	},
 	-- Formula: Enchant Weapon - Mongoose
 	[22559] = {
