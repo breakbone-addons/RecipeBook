@@ -5,6 +5,9 @@
 ### Bug Fixes
 - Fixed tooltips for recipes keyed by spell ID (discovery flasks, discovery transmutes, Find Fish, Prospecting, trainer-taught enchants) so they show the correct spell instead of an unrelated item. Most visible case: hovering **Flask of Blinding Light** previously showed *Ribbon of Sacrifice*.
 
+### Data
+- Corrected phase for **Formula: Enchant Ring - Stats** (phase 1 → 3). Thanks to @Bennylavaa.
+
 ## v1.6.1
 
 ### Data
